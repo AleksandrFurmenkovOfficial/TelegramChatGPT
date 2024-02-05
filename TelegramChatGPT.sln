@@ -28,7 +28,4 @@ Global
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DB9479DD-495A-4B1D-B43F-236E8922E031}
 	EndGlobalSection
-	GlobalSection(NDepend) = preSolution
-		Project = ".\TelegramChatGPT.ndproj"
-	EndGlobalSection
 EndGlobal
