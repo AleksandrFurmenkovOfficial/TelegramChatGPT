@@ -1,5 +1,6 @@
 # ChatGPT Telegram Bot 
 [![.NET](https://github.com/AleksandrFurmenkovOfficial/TelegramChatGPT/actions/workflows/dotnet.yml/badge.svg)](https://github.com/AleksandrFurmenkovOfficial/TelegramChatGPT/actions/workflows/dotnet.yml)
+[![CodeQL](https://github.com/AleksandrFurmenkovOfficial/TelegramChatGPT/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/AleksandrFurmenkovOfficial/TelegramChatGPT/actions/workflows/github-code-scanning/codeql)
 
 ## Overview
 This repository contains the source code for a free telegram bot that integrates with ChatGPT. The bot is designed to provide user a variety of functionalities including image recognition, image generation, internet search for answering simple queries, and a note-taking feature to record notes between dialogues.
