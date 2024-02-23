@@ -14,7 +14,7 @@ namespace TelegramChatGPT.Implementation
         IAiImagePainter aiImagePainter,
         IAiImageDescriptor aiGetImageDescription) : IAiAgent
     {
-        private const string GptModel = "gpt-4-1106-preview";
+        private const string GptModel = "gpt-4-0125-preview";
         private static readonly ThreadLocal<Random> Random = new(() => new Random(Guid.NewGuid().GetHashCode()));
         private readonly IDictionary<string, IAiFunction> functions = GetAiFunctions();
 
