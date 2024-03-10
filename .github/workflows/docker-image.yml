@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "release" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "release" ]
 
 jobs:
   build:
@@ -19,7 +19,7 @@ jobs:
       run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       
     - name: Build the Docker Image
-      run: docker build . -t ${{ secrets.DOCKER_USER }}/&{{ DOCKER_REPO }}:$GITHUB_SHA
+      run: docker build . -t ${{ secrets.DOCKER_USER }}/&{{ secrets.DOCKER_REPO }}:$GITHUB_SHA
       
     - name: Docker Push
-      run: docker push ${{ secrets.DOCKER_USER }}/&{{ DOCKER_REPO }}:$GITHUB_SHA
+      run: docker push ${{ secrets.DOCKER_USER }}/&{{ secrets.DOCKER_REPO }}:$GITHUB_SHA
