@@ -1,6 +1,5 @@
 FROM ubuntu:22.04
 
-ARG APP_PATH
 EXPOSE 443
 
 RUN apt-get update && \
@@ -10,6 +9,6 @@ RUN update-ca-certificates
 RUN apt-get update
 RUN apt-get install -y dotnet-sdk-8.0
 
-COPY ${APP_PATH} /TelegramChatGPT
+COPY . /TelegramChatGPT
 WORKDIR /TelegramChatGPT
 ENTRYPOINT ["dotnet", "TelegramChatGPT.dll"]
