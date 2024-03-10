@@ -63,8 +63,7 @@ jobs:
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USER }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        BUILD_PATH: ${{ env.BUILD_PATH }}
       run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          docker build . --build-arg APP_PATH=${{ env.BUILD_PATH }} -t ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPO }}:${{ env.SHORT_SHA }}
+          docker build ${{ env.BUILD_PATH }} -t ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPO }}:${{ env.SHORT_SHA }}
           docker push ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPO }}:${{ env.SHORT_SHA }}
