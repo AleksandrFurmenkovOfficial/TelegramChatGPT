@@ -65,5 +65,5 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          docker build ${{ env.BUILD_PATH }} -t ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPO }}:${{ env.SHORT_SHA }}
+          docker build -f ${{ env.BUILD_PATH }}/Dockerfile ${{ env.BUILD_PATH }} -t ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPO }}:${{ env.SHORT_SHA }}
           docker push ${{ secrets.DOCKER_USER }}/${{ secrets.DOCKER_REPO }}:${{ env.SHORT_SHA }}
