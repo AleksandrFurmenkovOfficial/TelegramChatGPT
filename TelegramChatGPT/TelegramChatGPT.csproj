@@ -33,7 +33,7 @@
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.39.0-preview.1" />
     <PackageReference Include="NLog" Version="5.2.8" />
     <PackageReference Include="RxTelegram.Bot" Version="7.1.0" />
-    <PackageReference Include="Rystem.OpenAi" Version="3.3.11" />
+    <PackageReference Include="Rystem.OpenAi" Version="3.3.12" />
     <PackageReference Include="System.Reactive.Core" Version="6.0.1-preview.1" />
   </ItemGroup>
 
