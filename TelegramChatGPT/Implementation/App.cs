@@ -21,11 +21,11 @@ namespace TelegramChatGPT.Implementation
                 throw new InvalidOperationException("The environment variable 'OPENAI_API_KEY' is not set.");
             }
 
-            var antrophicAiApiKey = Environment.GetEnvironmentVariable("ANTROPHIC_API_KEY");
-            if (string.IsNullOrEmpty(antrophicAiApiKey))
-            {
-                throw new InvalidOperationException("The environment variable 'ANTROPHIC_API_KEY' is not set.");
-            }
+            var antrophicAiApiKey = ""; //Environment.GetEnvironmentVariable("ANTROPHIC_API_KEY"); // TODO:
+            //if (string.IsNullOrEmpty(antrophicAiApiKey))
+            //{
+            //    throw new InvalidOperationException("The environment variable 'ANTROPHIC_API_KEY' is not set.");
+            //}
 
             var telegramBotKey = Environment.GetEnvironmentVariable("TELEGRAM_BOT_KEY");
             if (string.IsNullOrEmpty(telegramBotKey))
