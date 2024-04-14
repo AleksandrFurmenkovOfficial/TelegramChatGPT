@@ -24,21 +24,6 @@ namespace TelegramChatGPT.Tests.FakeImplementation
             throw new NotImplementedException();
         }
 
-        Task<string?> IAiImageDescriptor.GetImageDescription(Uri image, string question, string? systemMessage, CancellationToken cancellationToken)
-        {
-            if (cancelledTasks)
-            {
-                return Task.FromCanceled<string?>(cancellationToken);
-            }
-
-            if (exceptionThrower)
-            {
-                return Task.FromException<string?>(new InvalidOperationException());
-            }
-
-            throw new NotImplementedException();
-        }
-
         Task IAiAgent.GetResponse(string chatId, IEnumerable<IChatMessage> messages, Func<ResponseStreamChunk, Task<bool>> responseStreamChunkGetter, CancellationToken cancellationToken)
         {
             if (cancelledTasks)

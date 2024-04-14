@@ -15,7 +15,7 @@ namespace TelegramChatGPT.Implementation.AiFunctions
             {
                 Name = Name,
                 Description =
-                    "This function retrieves and analyzes the content of a specified webpage to extract relevant information based on a provided question.\n" +
+                    "This function retrieves and analyzes the content of a specified webpage. It allows you to get actual weather, currency, news, etc.\n" +
                     "Your rating for the function: 8 out of 10.",
 
                 Parameters = new JsonFunctionNonPrimitiveProperty()

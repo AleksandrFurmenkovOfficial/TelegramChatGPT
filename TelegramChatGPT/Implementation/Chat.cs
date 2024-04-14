@@ -29,13 +29,14 @@ namespace TelegramChatGPT.Implementation
         {
             await UpdateLastMessageButtons(default).ConfigureAwait(false);
 
-            messages.Add([message]);
+            AddNewUsersMessage(message);
             await DoStreamResponseToLastMessage(null, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task Reset(CancellationToken cancellationToken)
         {
-            await UpdateLastMessageButtons(cancellationToken).ConfigureAwait(false);
+            await UpdateLastMessageButtons(default).ConfigureAwait(false);
+
             messages.Clear();
         }
 
@@ -49,14 +50,14 @@ namespace TelegramChatGPT.Implementation
 
         public async Task RegenerateLastResponse(CancellationToken cancellationToken)
         {
-            await RemoveResponse(cancellationToken).ConfigureAwait(false);
+            await RemoveResponse(default).ConfigureAwait(false);
             await DoStreamResponseToLastMessage(null, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task ContinueLastResponse(CancellationToken cancellationToken)
         {
             await DoResponseToMessage(new ChatMessage(IChatMessage.InternalMessageId, Strings.Continue,
-                Strings.RoleSystem, Strings.RoleSystem), cancellationToken).ConfigureAwait(false);
+                Strings.RoleUser, Strings.RoleSystem), cancellationToken).ConfigureAwait(false);
         }
 
         public async Task RemoveResponse(CancellationToken cancellationToken)
@@ -127,6 +128,11 @@ namespace TelegramChatGPT.Implementation
             };
         }
 
+        private void AddNewUsersMessage(IChatMessage newMessageFromUser)
+        {
+            messages.Add([newMessageFromUser]);
+        }
+
         private void AddAnswerMessage(IChatMessage responseTargetMessage)
         {
             messages.Last()?.Add(responseTargetMessage);
@@ -137,7 +143,7 @@ namespace TelegramChatGPT.Implementation
         {
             responseTargetMessage ??= await SendResponseTargetMessage(default).ConfigureAwait(false);
 
-            await aiAgent!.GetResponse(Id, messages.SelectMany(subList => subList),
+            await aiAgent!.GetResponse(Id, messages.SelectMany(subList => subList.ToList()),
                     Task<bool> (contentDelta) =>
                         ProcessAsyncResponse(responseTargetMessage, contentDelta, cancellationToken),
                     cancellationToken)
@@ -154,10 +160,8 @@ namespace TelegramChatGPT.Implementation
 
             if (textStreamUpdate || finalUpdate)
             {
-                finalUpdate |=
-                    !await UpdateTargetMessage(responseTargetMessage, contentDelta.TextDelta ?? "", finalUpdate, default)
-                        .ConfigureAwait(false);
-
+                bool res = await UpdateTargetMessage(responseTargetMessage, contentDelta.TextDelta ?? "", finalUpdate, default).ConfigureAwait(false);
+                finalUpdate |= !res;
                 if (!finalUpdate)
                 {
                     return false;

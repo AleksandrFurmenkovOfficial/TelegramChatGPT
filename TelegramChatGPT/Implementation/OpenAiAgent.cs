@@ -11,11 +11,9 @@ namespace TelegramChatGPT.Implementation
         string systemMessage,
         bool enableFunctions,
         IOpenAi openAiApi,
-        IAiImagePainter aiImagePainter,
-        IAiImageDescriptor aiGetImageDescription) : IAiAgent
+        IAiImagePainter aiImagePainter) : IAiAgent, IAiImagePainter
     {
-        private const string GptModel = "gpt-4-0125-preview";
-        private static readonly ThreadLocal<Random> Random = new(() => new Random(Guid.NewGuid().GetHashCode()));
+        private const string GptModel = "gpt-4-turbo-2024-04-09";
         private readonly IDictionary<string, IAiFunction> functions = GetAiFunctions();
 
         public string AiName => aiName;
@@ -34,7 +32,7 @@ namespace TelegramChatGPT.Implementation
             string? data,
             CancellationToken cancellationToken = default)
         {
-            return new OpenAiSimpleResponseGetter(openAiApi, GptModel, GetTemperature()).GetResponse(GptModel, question,
+            return new OpenAiSimpleResponseGetter(openAiApi, GptModel, Utils.GetRandTemperature()).GetResponse(GptModel, question,
                 data, cancellationToken);
         }
 
@@ -44,19 +42,11 @@ namespace TelegramChatGPT.Implementation
             return aiImagePainter.GetImage(imageDescription, userId, cancellationToken);
         }
 
-        public Task<string?> GetImageDescription(Uri image, string question, string? overridenSystemMessage = null,
-            CancellationToken cancellationToken = default)
-        {
-            return aiGetImageDescription.GetImageDescription(image, question,
-                string.IsNullOrEmpty(systemMessage) ? systemMessage : overridenSystemMessage, cancellationToken);
-        }
-
         private static IDictionary<string, IAiFunction> GetAiFunctions()
         {
             var functions = new Dictionary<string, IAiFunction>();
 
             AddFunction(new GetImageByDescription());
-            AddFunction(new GetImageDescription());
 
             AddFunction(new GetLastEntriesFromMyDiary());
             AddFunction(new GetAnswerFromDiaryAboutUser());
@@ -91,7 +81,7 @@ namespace TelegramChatGPT.Implementation
 
             var resultMessage = new ChatMessage
             {
-                Role = Strings.RoleFunction,
+                Role = Strings.RoleAssistant,
                 Content = $"{{\"result\": {JsonConvert.SerializeObject(result.Result)}}}",
                 Name = functionName,
                 ImageUrl = result.ImageUrl
@@ -127,12 +117,52 @@ namespace TelegramChatGPT.Implementation
 
         private static IEnumerable<Rystem.OpenAi.Chat.ChatMessage> ConvertMessages(IEnumerable<IChatMessage> messages)
         {
-            return messages.Select(message => new Rystem.OpenAi.Chat.ChatMessage
+            var result = new List<Rystem.OpenAi.Chat.ChatMessage>();
+
+            foreach (var message in messages)
             {
-                StringableRole = message.Role ?? "",
-                Content = message.Content,
-                Name = message.Name
-            });
+                if (message.ImagesInBase64 != null && message.ImagesInBase64.Count > 0)
+                {
+                    List<object> values = [];
+
+                    if (!string.IsNullOrWhiteSpace(message.Content))
+                    {
+                        values.Add(new
+                        {
+                            type = "text",
+                            text = !string.IsNullOrEmpty(message.Content) ? message.Content : Strings.WhatIsOnTheImage
+                        });
+                    }
+
+                    foreach (var image in message.ImagesInBase64)
+                    {
+                        values.Add(new
+                        {
+                            type = "image_url",
+                            image_url = new
+                            {
+                                url = $"data:image/jpeg;base64,{image}"
+                            }
+                        });
+                    }
+
+                    result.Add(new Rystem.OpenAi.Chat.ChatMessage
+                    {
+                        StringableRole = message.Role ?? Strings.RoleAssistant,
+                        Content = values
+                    });
+                }
+                else if (!string.IsNullOrWhiteSpace(message.Content))
+                {
+                    result.Add(new Rystem.OpenAi.Chat.ChatMessage
+                    {
+                        StringableRole = message.Role ?? Strings.RoleAssistant,
+                        Content = message.Content
+                    });
+                }
+            }
+
+            return result;
         }
 
         private void AddFunctions(ChatRequestBuilder builder)
@@ -141,18 +171,6 @@ namespace TelegramChatGPT.Implementation
             {
                 _ = builder.WithFunction(function.Value.Description());
             }
-        }
-
-        private static double GetTemperature()
-        {
-            const double minTemperature = 0.333;
-            const double oneThird = 1.0 / 3.0;
-            if (Random.Value != null)
-            {
-                return minTemperature + (Random.Value.NextDouble() * oneThird);
-            }
-
-            return minTemperature;
         }
 
         private async Task GetAiResponseImpl(
@@ -168,7 +186,7 @@ namespace TelegramChatGPT.Implementation
                 var messageBuilder = openAiApi.Chat.Request(new Rystem.OpenAi.Chat.ChatMessage
                 { Role = ChatRole.System, Content = systemMessage })
                     .WithModel(GptModel)
-                    .WithTemperature(GetTemperature());
+                    .WithTemperature(Utils.GetRandTemperature());
 
                 if (enableFunctions)
                 {
@@ -180,16 +198,14 @@ namespace TelegramChatGPT.Implementation
                     _ = messageBuilder.AddMessage(message);
                 }
 
-                string currentFunction = "";
-                string currentFunctionArguments = "";
-                const string functionCallReason = "function_call";
+                string functionName = "";
+                string functionArgs = "";
+                const string functionCallReason = "tool_calls";
                 await foreach (var streamingChatResult in messageBuilder.ExecuteAsStreamAsync(false, cancellationToken)
                                    .ConfigureAwait(false))
                 {
-                    var newPartOfResponse = streamingChatResult.LastChunk.Choices?.ElementAt(0);
-                    var messageDelta = newPartOfResponse?.Delta?.Content ?? "";
-                    var functionDelta = newPartOfResponse?.Delta?.Function;
-
+                    var responseDelta = streamingChatResult.LastChunk.Choices?.ElementAt(0);
+                    var messageDelta = responseDelta?.Delta?.Content?.ToString();
                     if (!string.IsNullOrEmpty(messageDelta))
                     {
                         isCancelled = await streamGetter(new ResponseStreamChunk(messageDelta)).ConfigureAwait(false);
@@ -198,23 +214,23 @@ namespace TelegramChatGPT.Implementation
                             return;
                         }
                     }
-                    else if (functionDelta != null)
+                    else if (responseDelta?.FinishReason != functionCallReason)
                     {
-                        if (functionDelta.Name != null)
+                        var functionCall = responseDelta?.Delta?.ToolCalls?[0]?.Function;
+                        if (functionCall != null)
                         {
-                            currentFunction = functionDelta.Name;
-                        }
-                        else
-                        {
-                            currentFunctionArguments += functionDelta.Arguments;
+                            isFunctionCall = true;
+                            if (!string.IsNullOrWhiteSpace(functionCall.Name))
+                            {
+                                functionName = functionCall.Name ?? "";
+                            }
+
+                            functionArgs += functionCall.Arguments ?? "";
                         }
                     }
-                    else if (newPartOfResponse?.FinishReason == functionCallReason)
+                    else if (isFunctionCall && !string.IsNullOrEmpty(functionName))
                     {
-                        isFunctionCall = true;
-                        await CallFunction(currentFunction, currentFunctionArguments, userId, streamGetter,
-                                cancellationToken)
-                            .ConfigureAwait(false);
+                        await CallFunction(functionName, functionArgs, userId, streamGetter, cancellationToken).ConfigureAwait(false);
                         return;
                     }
                 }

@@ -28,10 +28,10 @@ using System.Diagnostics.CodeAnalysis;
         Scope = "type", Target = "~T:TelegramChatGPT.Implementation.ChatMessageActions.ChatMessageActionProcessor")]
 [assembly:
     SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "<Pending>",
-        Scope = "type", Target = "~T:TelegramChatGPT.Implementation.AiAgentFactory")]
+        Scope = "type", Target = "~T:TelegramChatGPT.Implementation.OpenAiAgentFactory")]
 [assembly:
     SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "<Pending>",
-        Scope = "type", Target = "~T:TelegramChatGPT.Implementation.AiAgentFactory")]
+        Scope = "type", Target = "~T:TelegramChatGPT.Implementation.OpenAiAgentFactory")]
 [assembly:
     SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "<Pending>",
         Scope = "type", Target = "~T:TelegramChatGPT.Implementation.OpenAiImageDescriptor")]

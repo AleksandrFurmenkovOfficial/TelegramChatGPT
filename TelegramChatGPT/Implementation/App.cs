@@ -21,6 +21,12 @@ namespace TelegramChatGPT.Implementation
                 throw new InvalidOperationException("The environment variable 'OPENAI_API_KEY' is not set.");
             }
 
+            var antrophicAiApiKey = Environment.GetEnvironmentVariable("ANTROPHIC_API_KEY");
+            if (string.IsNullOrEmpty(antrophicAiApiKey))
+            {
+                throw new InvalidOperationException("The environment variable 'ANTROPHIC_API_KEY' is not set.");
+            }
+
             var telegramBotKey = Environment.GetEnvironmentVariable("TELEGRAM_BOT_KEY");
             if (string.IsNullOrEmpty(telegramBotKey))
             {
@@ -30,7 +36,7 @@ namespace TelegramChatGPT.Implementation
             var adminUserId = Environment.GetEnvironmentVariable("TELEGRAM_ADMIN_USER_ID") ?? "";
 
             var serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection, openAiApiKey, telegramBotKey, adminUserId);
+            ConfigureServices(serviceCollection, openAiApiKey, antrophicAiApiKey, telegramBotKey, adminUserId);
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var chatProcessor = serviceProvider.GetRequiredService<IChatProcessor>();
             return chatProcessor.Run();
@@ -39,17 +45,27 @@ namespace TelegramChatGPT.Implementation
         private static void ConfigureServices(
             IServiceCollection services,
             string openAiApiKey,
+            string antrophicAiApiKey,
             string telegramBotKey,
             string adminUserId)
         {
             services.AddSingleton(new ConcurrentDictionary<string, IAppVisitor>());
             services.AddSingleton(new ConcurrentDictionary<string, ConcurrentDictionary<string, ActionId>>());
             services.AddSingleton<IAdminChecker, AdminChecker>(_ => new AdminChecker(adminUserId));
-            services.AddSingleton<IAiAgentFactory, AiAgentFactory>(_ => new AiAgentFactory(openAiApiKey,
-                new OpenAiImagePainter(openAiApiKey),
-                new OpenAiImageDescriptor(openAiApiKey)));
+
+            //if (!string.IsNullOrWhiteSpace(antrophicAiApiKey))
+            //{
+            //    services.AddSingleton<IAiAgentFactory, AntrophicAgentFactory>(_ => new AntrophicAgentFactory(antrophicAiApiKey));
+            //}
+            //else 
+            if (!string.IsNullOrWhiteSpace(openAiApiKey))
+            {
+                services.AddSingleton<IAiAgentFactory, OpenAiAgentFactory>(_ => new OpenAiAgentFactory(openAiApiKey,
+                new OpenAiImagePainter(openAiApiKey)));
+            }
+
             services.AddSingleton<ITelegramBotSource, TelegramBotSource>(_ =>
-                new TelegramBotSource(telegramBotKey));
+            new TelegramBotSource(telegramBotKey));
             services.AddSingleton<IMessenger, Messenger>();
 
             services.AddSingleton<IChatModeLoader, ChatModeLoader>();

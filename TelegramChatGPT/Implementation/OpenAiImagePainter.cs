@@ -6,7 +6,8 @@ namespace TelegramChatGPT.Implementation
     internal sealed class OpenAiImagePainter(string apiKey) : IAiImagePainter
     {
         private const string ApiHost = "https://api.openai.com/v1";
-        private const string GetImageModel = "dall-e-3";
+        private const string EndPoint = $"{ApiHost}/images/generations";
+        private const string ImageModel = "dall-e-3";
 
         public async Task<Uri?> GetImage(string imageDescription, string userId,
             CancellationToken cancellationToken = default)
@@ -18,7 +19,7 @@ namespace TelegramChatGPT.Implementation
 
             var response = await Utils.DoRequest<ImageResult>(new
             {
-                model = GetImageModel,
+                model = ImageModel,
                 prompt = imageDescription,
                 n = 1,
                 size = "1792x1024",
@@ -26,7 +27,7 @@ namespace TelegramChatGPT.Implementation
                 user = userId,
                 quality = "hd",
                 style = "vivid"
-            }, $"{ApiHost}/images/generations", apiKey, cancellationToken).ConfigureAwait(false);
+            }, EndPoint, apiKey, cancellationToken).ConfigureAwait(false);
 
             string? uriString = response?.Data?[0].Url;
             return uriString != null ? new Uri(uriString) : null;

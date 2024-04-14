@@ -4,7 +4,7 @@ using TelegramChatGPT.Interfaces;
 
 namespace TelegramChatGPT.Implementation
 {
-    internal sealed class OpenAiSimpleResponseGetter(IOpenAi openAiApi, string model, double temperature = 0.3)
+    internal sealed class OpenAiSimpleResponseGetter(IOpenAi openAiApi, string model, double temperature = 0.0)
         : IAiSimpleResponseGetter
     {
         public async Task<string?> GetResponse(
@@ -18,7 +18,7 @@ namespace TelegramChatGPT.Implementation
                 .WithModel(model)
                 .WithTemperature(temperature);
 
-            if (!string.IsNullOrEmpty(data))
+            if (!string.IsNullOrWhiteSpace(data))
             {
                 _ = request.AddMessage(new Rystem.OpenAi.Chat.ChatMessage
                 { Role = ChatRole.User, Content = $"{Strings.Text}:\n{data}" });
@@ -29,7 +29,8 @@ namespace TelegramChatGPT.Implementation
 
             var chatChoices =
                 (await request.ExecuteAsync(false, cancellationToken).ConfigureAwait(false)).Choices;
-            return chatChoices?[0].Message?.Content;
+
+            return chatChoices?[0].Message?.Content?.ToString() ?? "";
         }
     }
 }

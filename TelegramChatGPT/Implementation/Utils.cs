@@ -8,6 +8,18 @@ namespace TelegramChatGPT.Implementation
 {
     internal static class Utils
     {
+        private static readonly ThreadLocal<Random> Random = new(() => new Random(Guid.NewGuid().GetHashCode()));
+
+        public static double GetRandTemperature(double to = 0.5)
+        {
+            if (Random.Value != null)
+            {
+                return Random.Value.NextDouble() % to;
+            }
+
+            return 0.0;
+        }
+
         public static async Task<Stream> GetStreamFromUrlAsync(Uri url, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)

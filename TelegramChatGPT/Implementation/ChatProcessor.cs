@@ -20,7 +20,7 @@ namespace TelegramChatGPT.Implementation
         ITelegramBotSource botSource)
         : IChatProcessor, IDisposable
     {
-        private const long MaxUniqueVisitors = 10;
+        private const long MaxUniqueVisitors = 2;
         private static readonly CompositeFormat HasStarted = CompositeFormat.Parse(Strings.HasStarted);
 
         private readonly ConcurrentDictionary<string, ChatContext> chatContextById = [];
@@ -174,7 +174,7 @@ namespace TelegramChatGPT.Implementation
             {
                 return visitorByChatId.GetOrAdd(chatId, id =>
                 {
-                    bool accessByDefault = visitorByChatId.Count < MaxUniqueVisitors || adminChecker.IsAdmin(chatId);
+                    bool accessByDefault = visitorByChatId.Count <= MaxUniqueVisitors || adminChecker.IsAdmin(chatId);
                     var arg = new AppVisitor(accessByDefault, $"{user.FirstName}_{user.LastName}_{user.Username}");
                     return arg;
                 }).Access;

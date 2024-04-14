@@ -1,6 +1,6 @@
 ﻿namespace TelegramChatGPT.Interfaces
 {
-    internal interface IAiAgent : IAiSimpleResponseGetter, IAiImagePainter, IAiImageDescriptor
+    internal interface IAiAgent : IAiSimpleResponseGetter, IAiImagePainter
     {
         string AiName { get; }
 

@@ -22,6 +22,7 @@ namespace TelegramChatGPT.Implementation
                 throw new InvalidCastException(nameof(rawMessage));
             }
 
+            List<string> images = [];
             string forwardedFrom = "";
             string forwardedMessageContent = string.Empty;
 
@@ -56,16 +57,25 @@ namespace TelegramChatGPT.Implementation
                     forwardedMessageContent = replyTo;
                 }
 
-                forwardedMessageContent += (string.IsNullOrEmpty(replyToPhotoLink) ? "" : $"\n{Strings.AttachedImage}: \"{replyToPhotoLink}\"");
+                if (!string.IsNullOrEmpty(replyToPhotoLink))
+                {
+                    images.Add(await Utils.EncodeImageToBase64(new Uri(replyToPhotoLink), cancellationToken).ConfigureAwait(false));
+                }
             }
 
             string userPhotoLink = castedMessage!.Photo != null
                 ? await PhotoToLink(castedMessage.Photo, cancellationToken).ConfigureAwait(false)
                 : string.Empty;
-            string userContent = (castedMessage!.Text ?? castedMessage!.Caption ?? string.Empty) + (string.IsNullOrEmpty(userPhotoLink) ? "" : $"\n{Strings.AttachedImage}: \"{userPhotoLink}\"");
+
+            if (!string.IsNullOrEmpty(userPhotoLink))
+            {
+                images.Add(await Utils.EncodeImageToBase64(new Uri(userPhotoLink), cancellationToken).ConfigureAwait(false));
+            }
+
+            string userContent = (castedMessage!.Text ?? castedMessage!.Caption ?? string.Empty);
 
             var fromUser = CompoundUserName(castedMessage.From);
-            forwardedFrom = string.IsNullOrEmpty(forwardedFrom) ? "" : "User \"" + fromUser + "\" forwarded message from " + forwardedFrom + ".";
+            forwardedFrom = string.IsNullOrEmpty(forwardedFrom) ? "" : "\nUser \"" + fromUser + "\" forwarded message from " + forwardedFrom + ".";
             if (!string.IsNullOrEmpty(forwardedFrom) && string.IsNullOrEmpty(forwardedMessageContent))
             {
                 forwardedMessageContent = userContent;
@@ -77,17 +87,13 @@ namespace TelegramChatGPT.Implementation
                 forwardedMessageContent = "\nForwardedContent: \"" + forwardedMessageContent + "\"";
             }
 
-            if (!string.IsNullOrEmpty(userContent))
-            {
-                userContent = "\nContent: \"" + userContent + "\"";
-            }
-
             var resultMessage = new ChatMessage
             {
                 MessageId = new MessageId(castedMessage!.MessageId.ToString(CultureInfo.InvariantCulture)),
                 Name = fromUser,
                 Role = Strings.RoleUser,
-                Content = forwardedFrom + forwardedMessageContent + userContent
+                Content = userContent + forwardedFrom + forwardedMessageContent,
+                ImagesInBase64 = images
             };
 
             return resultMessage;

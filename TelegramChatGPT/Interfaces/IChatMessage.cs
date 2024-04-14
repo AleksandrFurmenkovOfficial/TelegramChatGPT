@@ -8,5 +8,6 @@
         string? Content { get; set; }
         string? Role { get; set; }
         public Uri? ImageUrl { get; set; }
+        public List<string>? ImagesInBase64 { get; set; }
     }
 }

@@ -7,11 +7,12 @@ namespace TelegramChatGPT.Implementation
         string? content = null,
         string? role = null,
         string? name = null,
-        Uri? imageUrl = null)
+        Uri? imageUrl = null,
+        List<string>? imagesInBase64 = null)
         : IChatMessage
     {
-        public ChatMessage(string content, string? role = null, string? name = null, Uri? imageUrl = null) : this(
-            IChatMessage.InternalMessageId, content, role, name, imageUrl)
+        public ChatMessage(string content, string? role = null, string? name = null, Uri? imageUrl = null, List<string>? imagesInBase64 = null) : this(
+            IChatMessage.InternalMessageId, content, role, name, imageUrl, imagesInBase64)
         {
         }
 
@@ -24,5 +25,6 @@ namespace TelegramChatGPT.Implementation
         public string? Role { get; set; } = role;
         public string? Name { get; set; } = name;
         public Uri? ImageUrl { get; set; } = imageUrl;
+        public List<string>? ImagesInBase64 { get; set; } = imagesInBase64;
     }
 }
