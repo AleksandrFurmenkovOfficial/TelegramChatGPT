@@ -14,7 +14,7 @@ namespace TelegramChatGPT.Implementation
         private readonly string _aiName;
         private readonly string _systemMessage;
         private readonly long _max_tokens = 1024;
-        private readonly string _tools;
+        //private readonly string _tools;
 
         public string AiName => _aiName;
 
@@ -27,7 +27,7 @@ namespace TelegramChatGPT.Implementation
             _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
             _httpClient.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
 
-            _tools = "";
+            //_tools = "";
         }
 
         public void Dispose()
