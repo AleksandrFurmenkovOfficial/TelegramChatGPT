@@ -1,4 +1,4 @@
-# ChatGPT Telegram Bot 
+# GPT Telegram Bot 
 [![.NET](https://github.com/AleksandrFurmenkovOfficial/TelegramChatGPT/actions/workflows/dotnet.yml/badge.svg)](https://github.com/AleksandrFurmenkovOfficial/TelegramChatGPT/actions/workflows/dotnet.yml)
 [![CodeQL](https://github.com/AleksandrFurmenkovOfficial/TelegramChatGPT/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/AleksandrFurmenkovOfficial/TelegramChatGPT/actions/workflows/github-code-scanning/codeql)
 
