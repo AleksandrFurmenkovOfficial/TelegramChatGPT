@@ -15,7 +15,8 @@ namespace TelegramChatGPT.Implementation.ChatCommands
                 return Task.FromCanceled(cancellationToken);
             }
 
-            _ = visitors.AddOrUpdate(chat.Id, _ =>
+            var id = message.Content!.Trim();
+            _ = visitors.AddOrUpdate(id, _ =>
             {
                 var arg = new AppVisitor(true, Strings.Unknown);
                 return arg;
