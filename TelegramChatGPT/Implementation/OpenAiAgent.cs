@@ -62,7 +62,7 @@ namespace TelegramChatGPT.Implementation
             }
         }
 
-        private IEnumerable<ChatMessage> CreateFunctionResultMessages(
+        private static IEnumerable<ChatMessage> CreateFunctionResultMessages(
             string callId,
             string functionName,
             string parameters,
