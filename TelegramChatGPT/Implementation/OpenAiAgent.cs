@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Rystem.OpenAi;
 using Rystem.OpenAi.Chat;
 using TelegramChatGPT.Implementation.AiFunctions;
@@ -62,35 +62,26 @@ namespace TelegramChatGPT.Implementation
             }
         }
 
-        private static string CallInfo(string function, string parameters)
-        {
-            return $"{{\"thought\": I called function \"{function}\" with arguments \"{parameters}\".}}";
-        }
-
         private IEnumerable<ChatMessage> CreateFunctionResultMessages(
+            string callId,
             string functionName,
             string parameters,
             AiFunctionResult result)
         {
-            var callMessage = new ChatMessage
-            {
-                Role = Strings.RoleAssistant,
-                Content = CallInfo(functionName, parameters),
-                Name = aiName
-            };
-
             var resultMessage = new ChatMessage
             {
                 Role = Strings.RoleAssistant,
-                Content = $"{{\"result\": {JsonConvert.SerializeObject(result.Result)}}}",
+                Content = $"{{ \"tool_call_id\": \"{callId}\", \"role\": \"tool\", \"name\": \"{functionName}\", \"content\": {JsonConvert.SerializeObject(result.Result)}}}",
                 Name = functionName,
                 ImageUrl = result.ImageUrl
             };
 
-            return [callMessage, resultMessage];
+            return [resultMessage];
         }
 
-        private async Task CallFunction(string functionName,
+        private async Task CallFunction(
+            string callId,
+            string functionName,
             string functionArguments,
             string userId,
             Func<ResponseStreamChunk, Task<bool>> streamGetter,
@@ -102,11 +93,11 @@ namespace TelegramChatGPT.Implementation
                 AppLogger.LogDebugMessage($"{aiName} calls function {functionName}({functionArguments})");
                 var result = await functions[functionName].Call(this, functionArguments, userId, cancellationToken)
                     .ConfigureAwait(false);
-                resultMessages.AddRange(CreateFunctionResultMessages(functionName, functionArguments, result));
+                resultMessages.AddRange(CreateFunctionResultMessages(callId, functionName, functionArguments, result));
             }
             catch (Exception e)
             {
-                resultMessages.AddRange(CreateFunctionResultMessages(functionName, functionArguments,
+                resultMessages.AddRange(CreateFunctionResultMessages(callId, functionName, functionArguments,
                     new AiFunctionResult("Exception: Can't call function " + functionName + " (" + functionArguments +
                                          "); Possible issues:\n1. function Name is incorrect\n2. wrong arguments are provided\n3. internal function error\nException message: " +
                                          e.Message)));
@@ -198,6 +189,7 @@ namespace TelegramChatGPT.Implementation
                     _ = messageBuilder.AddMessage(message);
                 }
 
+                string callId = "";
                 string functionName = "";
                 string functionArgs = "";
                 const string functionCallReason = "tool_calls";
@@ -216,13 +208,15 @@ namespace TelegramChatGPT.Implementation
                     }
                     else if (responseDelta?.FinishReason != functionCallReason)
                     {
-                        var functionCall = responseDelta?.Delta?.ToolCalls?[0]?.Function;
+                        var call = responseDelta?.Delta?.ToolCalls?[0];
+                        var functionCall = call?.Function;
                         if (functionCall != null)
                         {
                             isFunctionCall = true;
                             if (!string.IsNullOrWhiteSpace(functionCall.Name))
                             {
                                 functionName = functionCall.Name ?? "";
+                                callId = call?.Id ?? "";
                             }
 
                             functionArgs += functionCall.Arguments ?? "";
@@ -230,7 +224,7 @@ namespace TelegramChatGPT.Implementation
                     }
                     else if (isFunctionCall && !string.IsNullOrEmpty(functionName))
                     {
-                        await CallFunction(functionName, functionArgs, userId, streamGetter, cancellationToken).ConfigureAwait(false);
+                        await CallFunction(callId, functionName, functionArgs, userId, streamGetter, cancellationToken).ConfigureAwait(false);
                         return;
                     }
                 }
