@@ -13,7 +13,7 @@ namespace TelegramChatGPT.Implementation
         IOpenAi openAiApi,
         IAiImagePainter aiImagePainter) : IAiAgent, IAiImagePainter
     {
-        private const string GptModel = "gpt-4-turbo-2024-04-09";
+        private const string GptModel = "gpt-4o";
         private readonly IDictionary<string, IAiFunction> functions = GetAiFunctions();
 
         public string AiName => aiName;
